@@ -3,9 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import QRCode from "qrcode";
 
-export const register = (req,res)=>{
-    const q = "SELECT * FROM login WHERE Email = ? OR  UserName = ?"
-    db.query(q, [req.body.email, req.body.username], (err,data)=>{
+export const register = (req, res) => {
+    const q = "SELECT * FROM login WHERE Email = ? OR UserName = ?";
+    db.query(q, [req.body.email, req.body.username], (err, data) => {
         if (err) return res.status(500).json(err);
         if (data.length) return res.status(409).json("User already exists!");
 
@@ -14,29 +14,28 @@ export const register = (req,res)=>{
 
         const insertQuery = "INSERT INTO login (Firstname, Lastname, UserName, Address, Email, PhoneNo, Gender, Age, Weight, Height, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        const values =  [
+        const values = [
             req.body.firstname,
             req.body.lastname,
             req.body.username,
             req.body.address,
             req.body.email,
             req.body.phoneNo,
-            req.body.gender, 
+            req.body.gender,
             req.body.age,
             req.body.weight,
             req.body.height,
             hash,
-          ];
+        ];
 
-          db.query(insertQuery, values, (err, result) => {
+        db.query(insertQuery, values, (err, result) => {
             if (err) return res.status(500).json(err);
             return res.status(200).json("User has been created");
-          });
-
+        });
     });
 };
 
-export const login = (req, res) => {
+export const Mlogin = (req, res) => {
     const q = "SELECT * FROM login WHERE UserName = ?";
     db.query(q, [req.body.username], (err, data) => {
         if (err) return res.status(500).json(err);
@@ -53,7 +52,7 @@ export const login = (req, res) => {
         }
 
         const token = jwt.sign({ userid: data[0].userid }, "jwtkey");
-        const { Password, ...other } = data[0]; 
+        const { Password, ...other } = data[0];
 
         res.cookie("access_token", token, {
             httpOnly: true,
@@ -61,46 +60,45 @@ export const login = (req, res) => {
     });
 };
 
-
-export const logout = (req,res)=>{
-    res.clearCookie("access_token",{
+export const logout = (req, res) => {
+    res.clearCookie("access_token", {
         sameSite: "none",
-        secure:true
-    }).status(200).json("user has been logged out.")
-}
-
+        secure: true
+    }).status(200).json("User has been logged out.");
+};
 
 export const generateQRCode = (req, res) => {
     const userId = req.params.userId;
+    if (!userId) {
+        return res.status(400).json({ error: "User ID is missing" });
+    }
 
-   
     const qrCodeData = `User ID: ${userId}`;
 
-    
     QRCode.toDataURL(qrCodeData, (err, qrCodeUrl) => {
         if (err) {
             console.error("Error generating QR code:", err);
             return res.status(500).json({ error: "Failed to generate QR code" });
         }
 
-      
-        db.query("INSERT INTO qr_codes (user_id, qr_code) VALUES (?, ?)", [userId, qrCodeUrl], (err, result) => {
+        console.log("Generated QR code URL:", qrCodeUrl);
+
+        db.query("INSERT INTO qr_codes(user_id, qr_code) VALUES (?, ?)", [userId, qrCodeUrl], (err, result) => {
             if (err) {
                 console.error("Error storing QR code in database:", err);
                 return res.status(500).json({ error: "Failed to store QR code in database" });
             }
-            
-        
+
+            console.log("QR code stored in database.");
+
             res.status(200).json({ message: "QR code generated and stored successfully", userId });
         });
     });
 };
 
-
 export const getQRCode = (req, res) => {
     const userId = req.params.userId;
 
-    
     db.query("SELECT qr_code FROM qr_codes WHERE user_id = ?", [userId], (err, results) => {
         if (err) {
             console.error("Error retrieving QR code from database:", err);
@@ -108,10 +106,12 @@ export const getQRCode = (req, res) => {
         }
 
         if (results.length === 0) {
+            console.error("QR code not found in the database.");
             return res.status(404).json({ error: "QR code not found" });
         }
 
         const qrCodeUrl = results[0].qr_code;
+        console.log("Retrieved QR code URL from database:", qrCodeUrl);
         res.status(200).json({ qrCodeUrl });
     });
 };
