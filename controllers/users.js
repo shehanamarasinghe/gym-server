@@ -70,3 +70,38 @@ export const getUserById = async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   };
+
+
+
+
+  export const Userpayments = async (req, res) => {
+    const { userID, Amount, Month } = req.body; 
+  
+    try {
+      const result = await db.query('INSERT INTO payments (userid, Amount, Month) VALUES (?, ?, ?)', [userID, Amount, Month]);
+      res.status(201).json({ message: 'Payment added successfully' });
+    } catch (error) {
+      console.error('Error adding payment:', error);
+      res.status(500).json({ error: 'An error occurred while adding the payment' });
+    }
+  };
+
+
+  export const Paymentget = async (req, res) => {
+
+    const userId = req.params.userId;
+
+    const query = `
+      SELECT * FROM payments WHERE userid = ?`;
+  
+    db.query(query, [userId], (err, results) => {
+      if (err) {
+        res.status(500).json({ error: 'Error fetching user meal plan' });
+      } else {
+        res.json(results);
+      }
+    });
+
+  
+
+  };

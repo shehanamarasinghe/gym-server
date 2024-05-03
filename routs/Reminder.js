@@ -3,6 +3,6 @@ import { createReminder } from "../controllers/Reminder.js";
 
 const router = express.Router();
 
-router.post("/Reminder", createReminder);
+router.post("/", createReminder);
 
 export default router

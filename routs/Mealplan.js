@@ -1,11 +1,14 @@
 import express from "express";
-import { AddMeal, Meal, getMealNames, uploadMealImage } from "../controllers/Mealplan.js";
+import { AddMeal, Meal, Mealassign, Memberassign, showMeals, showmealcard, uploadMealImage } from "../controllers/Mealplan.js";
 
 const router = express.Router();
 
-router.post("/", AddMeal);
+router.post("/mealplan", AddMeal);
 router.post("/meal", Meal);
 router.post("/upload",uploadMealImage); 
-router.get('/', getMealNames);
+router.get('/', showMeals);
+router.get("/Mealcard",showmealcard)
+router.post("/assignmeal", Mealassign);
+router.get("/Memberassign/:userId", Memberassign)
 
 export default router;
